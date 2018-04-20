@@ -1,5 +1,6 @@
 # CADDDH 
-##Computer Aided Diagnosis for Developmental Dysplasia of the Hip
+## Computer Aided Diagnosis for Developmental Dysplasia of the Hip
 <br />
-By Chuanbin Liu
+Chuanbin Liu
+<br />
 email : lcb592@mail.ustc.edu.cn
