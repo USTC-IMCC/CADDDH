@@ -1,47 +1,52 @@
-function [ result ] = processDicom( path,labeler,dicom_path,txt_path,jpg1_path,jpg2_path,window_width,window_center )
-%UNTITLED 此处显示有关此函数的摘要
+function [ result ] = processDicom( path,labeler,window_width,window_center )
+%function [ result ] = processDicom( path,labeler,dicom_path,txt_path,jpg1_path,jpg2_path,window_width,window_center )
 %   此处显示详细说明
     img = dicomread(path);   %读取图像
 	dcm = dicominfo(path);%存储信息
-    if(nargin<8)
-        if(nargin<6)
+    cur_path = [pwd,'\'];
+    dicom_path = [cur_path,'dicom\'];
+    txt_path = [cur_path,'txt\'];
+    jpg1_path = [cur_path,'original_jpg\'];
+    jpg2_path = [cur_path,'labeled_jpg\'];
+    unlabed_path = [cur_path,'unlabeddicom\'];
+    path_list = {dicom_path,txt_path,jpg1_path,jpg2_path,unlabed_path};
+    for i = 1:1:5
+        if ~exist(path_list{i})
+            mkdir(path_list{i});
+        end
+    end
+    if(nargin<4)
+        if(nargin<2)
             result = -1;
             return;
         end
         window_width = dcm.WindowWidth;
         window_center = dcm.WindowCenter;
     end
-    if strcmp(dicom_path(end),'\')||strcmp(dicom_path(end),'\')
-        dicom_path = [dicom_path,'\'];
-    end
-    if strcmp(txt_path(end),'\')||strcmp(txt_path(end),'\')
-        txt_path = [txt_path,'\'];
-    end
-    if strcmp(jpg1_path(end),'\')||strcmp(jpg1_path(end),'\')
-        jpg1_path = [jpg1_path,'\'];
-    end
-    if strcmp(jpg2_path(end),'\')||strcmp(jpg2_path(end),'\')
-        jpg2_path = [jpg2_path,'\'];
+    if ~(strcmp(dicom_path(end),'\')||strcmp(dicom_path(end),'\'))
+        dicom_path = [dicom_path,'\\'];
     end
     
     uid = dcm.SOPInstanceUID;
-    copyfile(path,[dicom_path,labeler,'_',uid,'.dcm']);
-    img = double(img);
-    img = (img-window_center+0.5*window_width)/window_width*255;
-    img = uint8(img);
-    image=figure;
-    imshow(img);%显示原图图像
-    saveas(image,[jpg1_path,labeler,'_',uid,'.jpg']);
-    hold on;
     try
         data1 = dcm.CurveData_0;
         data2 = dcm.CurveData_2;
         data3 = dcm.CurveData_4;
         data = {data1 data2 data3};
     catch
+        copyfile(path,[unlabed_path,labeler,'_',uid,'.dcm']);
         result = -2;
         return;
     end
+    copyfile(path,[dicom_path,labeler,'_',uid,'.dcm']);
+    img = double(img);
+    img = (img-window_center+0.5*window_width)/window_width*255;
+    img = uint8(img);
+    image=figure('visible','off');
+    imshow(img,'border','tight');%显示原图图像
+    saveas(image,[jpg1_path,labeler,'_',uid,'.jpg']);
+    hold on;
+    
     str_txt = [];
     for j = 1:1:3
         data_current = data{j};
@@ -66,7 +71,7 @@ function [ result ] = processDicom( path,labeler,dicom_path,txt_path,jpg1_path,j
     fprintf(f_txt,'%s\r\n',str_txt);
     fclose(f_txt);
     result = 0;
-    
+    close all;
 %%line([dcm5.CurveData_0(1) dcm5.CurveData_0(2)],[dcm5.CurveData_0(3) dcm5.CurveData_0(4)],'color','r','LineWidth',5);
 % for i = 1:1:6
 %     plot(dcm5.CurveData_0(i*2-1),dcm5.CurveData_0(i*2),'ro');
@@ -79,4 +84,3 @@ function [ result ] = processDicom( path,labeler,dicom_path,txt_path,jpg1_path,j
 %  plot(dcm6.CurveData_8(1),dcm6.CurveData_8(2),'yo');
 
 end
-
