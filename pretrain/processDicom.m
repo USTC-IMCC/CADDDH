@@ -1,8 +1,23 @@
 function [ result ] = processDicom( path,labeler,window_width,window_center )
 %function [ result ] = processDicom( path,labeler,dicom_path,txt_path,jpg1_path,jpg2_path,window_width,window_center )
 %   此处显示详细说明
-    img = dicomread(path);   %读取图像
-	dcm = dicominfo(path);%存储信息
+    try
+        img = dicomread(path);   %读取图像
+        dcm = dicominfo(path);%存储信息
+        if img == []
+            result = -4;
+            return;
+        end
+        try
+            try_window = dcm.WindowCenter;
+        catch
+            result = -4;
+            return;
+        end
+    catch
+        result = -4;
+        return;
+    end
     cur_path = [pwd,'\'];
     dicom_path = [cur_path,'dicom\'];
     txt_path = [cur_path,'txt\'];
