@@ -4,7 +4,7 @@ function [ result ] = processDicom( path,labeler,window_width,window_center )
     try
         img = dicomread(path);   %∂¡»°ÕºœÒ
         dcm = dicominfo(path);%¥Ê¥¢–≈œ¢
-        if img == []
+        if (size(img,1) == 0)||(size(img,2) == 0)
             result = -4;
             return;
         end
@@ -18,7 +18,7 @@ function [ result ] = processDicom( path,labeler,window_width,window_center )
         result = -4;
         return;
     end
-    cur_path = [pwd,'\'];
+    cur_path = 'H:\';
     dicom_path = [cur_path,'dicom\'];
     txt_path = [cur_path,'txt\'];
     jpg1_path = [cur_path,'original_jpg\'];
@@ -42,12 +42,22 @@ function [ result ] = processDicom( path,labeler,window_width,window_center )
         dicom_path = [dicom_path,'\\'];
     end
     
-    uid = dcm.SOPInstanceUID;
+    uid = dcm.AccessionNumber;
     try
         data1 = dcm.CurveData_0;
         data2 = dcm.CurveData_2;
         data3 = dcm.CurveData_4;
-        data = {data1 data2 data3};
+        data4 = dcm.CurveData_6;
+        data5 = dcm.CurveData_8;
+        data6 = dcm.CurveData_A;
+        data7 = dcm.CurveData_C;
+        data8 = dcm.CurveData_E;
+        data9 = dcm.CurveData_10;
+        data10 = dcm.CurveData_12;
+        data11 = dcm.CurveData_14;
+        data12 = dcm.CurveData_16;
+        data13 = dcm.CurveData_18;
+        data = {data1 data2 data3 data4 data5 data6 data7 data8 data9 data10 data11 data12 data13};
     catch
         copyfile(path,[unlabed_path,labeler,'_',uid,'.dcm']);
         result = -2;
@@ -63,19 +73,16 @@ function [ result ] = processDicom( path,labeler,window_width,window_center )
     hold on;
     
     str_txt = [];
-    for j = 1:1:3
+    for j = 1:1:13
         data_current = data{j};
         if size(data_current,1)==12
             for i = 4:-1:1
                 plot(data_current(i*2-1),data_current(i*2),'ro','linewidth',2);
                 str_txt = [num2str(data_current(i*2-1)),' ',num2str(data_current(i*2)),' ',str_txt];
             end
-        elseif size(data_current,1)==8
-            for i = 1:2:5
-                line([data_current(i),data_current(i+2)],[data_current(i+1),data_current(i+3)],'linewidth',2,'color','b');
-            end
-            line([data_current(1),data_current(7)],[data_current(2),data_current(8)],'linewidth',2,'color','b');
-            str_txt = [str_txt,num2str(data_current(1)),' ',num2str(data_current(2)),' ',num2str(data_current(5)),' ',num2str(data_current(6)),' '];
+        elseif size(data_current,1)==2
+            plot(data_current(1),data_current(2),'yo','linewidth',2);
+            str_txt = [str_txt,num2str(data_current(1)),' ',num2str(data_current(2)),' '];
         else
             result = -3;
             return;
