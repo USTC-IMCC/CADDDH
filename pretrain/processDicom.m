@@ -69,9 +69,9 @@ function [ result ] = processDicom( path,labeler,window_width,window_center )
     img = uint8(img);
     image=figure('visible','off');
     imshow(img,'border','tight');%œ‘ æ‘≠ÕºÕºœÒ
-    saveas(image,[jpg1_path,labeler,'_',uid,'.jpg']);
+    %saveas(image,[jpg1_path,labeler,'_',uid,'.jpg']);
     hold on;
-    
+    imwrite(mat2gray(img),[jpg1_path,labeler,'_haha',uid,'.jpg']) % Add by Boss Liu, save the image with origin sizes
     str_txt = [];
     for j = 1:1:13
         data_current = data{j};
