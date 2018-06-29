@@ -2,7 +2,7 @@
 import cv2
 
 def point_show(filename):
-    radius=10
+     radius=10
     with open(filename) as file_project:
         content = file_project.readlines()
         for line in content:
