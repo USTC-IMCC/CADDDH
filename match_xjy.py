@@ -1,4 +1,8 @@
 # -*- coding:utf-8 -*-
+"""
+Created on Thu July 2 2018
+@author: xujingyuan
+"""
 import cv2
 import os
 import numpy as np
@@ -9,7 +13,6 @@ import numpy ,time
 import matplotlib.pyplot as plt
 from sklearn.cluster import MeanShift, estimate_bandwidth
 import PIL.Image as Image
-
 
 oridir = './original_jpg/'
 votdir = './voteresult/'
