@@ -17,7 +17,7 @@ import PIL.Image as Image
 oridir = './original_jpg/'
 votdir = './voteresult/'
 resdir = './res/'
-labdir = './labeled_jpg/'
+labdir = './txt_doc/'
 tempdir = "./temple/"
 txtdir = './txt/'
 
@@ -47,13 +47,24 @@ def main():
 	errorstr = 'Not Found'
 	
 	for q in os.listdir(r'./original_jpg'):
-		z=q.split('.')
 		print(oridir+q)
 		img_ori = cv2.imread(oridir+q)
-		img_doctor = cv2.imread(labdir+q)
-		
+		img_doctor = img_ori.copy()
+		#读取测试集数据并标点显示在结果中作为对比
+		z=q.split('.')
+		stxt = z[0]+'.txt'
+		ftxt = open(labdir+stxt,'r')
+		linedoc = ftxt.readline()
+		docdata = linedoc.split(' ')
+		for idoc in range(0,6):
+			doc1 = int(float(docdata[2*idoc]))
+			doc2 = int(float(docdata[2*idoc+1]))
+			imaged = cv2.circle(img_doctor,(doc1,doc2),1,(255,0,0),6)
 		#确定搜索区域
 		spand = findedge(img_ori)
+		if img_ori.shape[1]/spand[2]>5:
+			#无法信任初步findege的框选，使用默认框选
+			spand = (int(img_ori.shape[1]*0.2),int(img_ori.shape[0]*0.2),int(img_ori.shape[1]*0.6),int(img_ori.shape[0]*0.6))
 		img_orinal = img_ori[spand[1]:spand[1]+spand[3],spand[0]:spand[0]+spand[2]]
 		#cv2.imshow('searcharea',img_orinal)
 		#cv2.waitKey(0)
@@ -107,7 +118,7 @@ def main():
 			#print (px,py)
 		print(PData)
 		for pd in PData:
-			imaged = cv2.circle(img_doctor,(int(pd[0]),int(pd[1])),1,(0,255,0),5)
+			imaged = cv2.circle(img_doctor,(int(pd[0]),int(pd[1])),1,(0,255,0),4)
 			visd = imaged.copy()
 			cv2.imwrite(resdir+q,visd)
 		#将结果写入txt文件
@@ -116,9 +127,9 @@ def main():
 		#print(z[0])
 		s = ''
 		with open(txtdir+z[0]+'.txt','w') as f:
-			for pt in PData:
-				s += str(pd[0])+' '
-				s += str(pd[1])+' '
+			for ppd in PData:
+				s += str(ppd[0])+' '
+				s += str(ppd[1])+' '
 			f.write(s)
 		
 		
@@ -149,6 +160,7 @@ def match(spand,q,tempdir,n,img_orinal,img_vot,threshold=0.6,method=0):
 			#print (rr)
 			template = resize(template,rr)
 		w1, h1 = template.shape[::-1]
+		#print (img_gray.shape)
 		#print (template.shape)
 		res = cv2.matchTemplate(img_gray,template,cv2.TM_CCOEFF_NORMED)
 		#threshold = 0.6
@@ -222,6 +234,7 @@ def kMeanCal(dataSet,k=0.3,N=6):
 		#print(centroids[0])
 		return (centroids[0][0],centroids[0][1])
 
+#寻找图像边缘
 def findedge(img,r=ratio,area = search_area):
 	w = img.shape[1]
 	h = img.shape[0]
