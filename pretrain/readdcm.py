@@ -5,6 +5,8 @@ import pydicom
 import argparse
 import cv2
 import shutil
+import numpy as np
+
 parser = argparse.ArgumentParser(description='Preprocee dicom data')
 parser.add_argument('--dir',default='./dicom/',type=str,help='choose directory to process')
 parser.add_argument('--res',default='./res/',type=str,help='choose directory to store the result')
@@ -28,11 +30,17 @@ def transb2f(dcm)					:#transform binary to float
 			hexdata += b
 	except IndexError:
 		print('Unlabeled or Wrong Label!')
-		return data
+		return None
+	except KeyError:
+		print('Unlabeled or Wrong Label!')
+		return None
 	else:
 		print('Successfully Labeled!')
 	for i in range(32):				#标注了16个点共32个数据
 		d = hexdata[4*i:4*i+4]			#一次读取2个字节为一个数据
+		if (len(d) != 4):
+			print('Too few labels!')
+			return None
 		f = struct.unpack('f',d)[0]
 		data.append(f)
 	return data
@@ -53,10 +61,20 @@ def processdcm(dcmDIR,dcmID):	#save the data
 	dicom_path = args.res + 'dicom/'
 	ljpg_path = args.res + 'labeled_jpg/'
 	udicom_path = args.res + 'unlabeled_dicom/'
+	cdata = ('0','1','2','3','4')
+	ldata = ('l','L')
+	rdata = ('r','R')
 	if (dcmDIR != None):
 		dcm = pydicom.read_file(dcmDIR)
 		data = transb2f(dcm)
-		if (data!=None):		#经过标注的数据处理
+		if (data != None):		#经过标注的数据处理
+			if (args.obj == 'doc'):
+				if(len(dcmID) != 19 or (dcmID[15] not in ldata) or (dcmID[17] not in rdata) or (dcmID[16] not in cdata) or (dcmID[18] not in cdata)):#命名错误
+					print('Name Erorr!')
+					if not os.path.exists(udicom_path):
+						os.makedirs(udicom_path)
+					shutil.copyfile(dcmDIR,udicom_path+dcmID+'.dcm')
+					return
 			img = dcm.pixel_array
 			if not os.path.exists(ori_path):
 				os.makedirs(ori_path)
@@ -69,15 +87,20 @@ def processdcm(dcmDIR,dcmID):	#save the data
 				for i in range(32):
 					s += str(data[i])
 					s += ' '
+				if(args.obj=='doc'):
+					s += dcmID[16]+' '
+					s += dcmID[18]+' '
 				f.write(s)
 			if not os.path.exists(dicom_path):
 				os.makedirs(dicom_path)
 			shutil.copyfile(dcmDIR,dicom_path+dcmID+'.dcm')
 			if not os.path.exists(ljpg_path):
 				os.makedirs(ljpg_path)
+			limg = cv2.merge([img,img,img])
 			for i in range(6):
-				img = drawcross(img,data[2*i],data[2*i+1])
-			cv2.imwrite(ljpg_path + dcmID + '.jpg',img)
+				limg = drawcross(limg,data[2*i],data[2*i+1])
+				cv2.putText(limg,str(i+1),(int(data[2*i])+15,int(data[2*i+1]-15)),cv2.FONT_HERSHEY_PLAIN,2,(255,100,0),3)
+			cv2.imwrite(ljpg_path + dcmID + '.jpg',limg)
 		else :
 			if not os.path.exists(udicom_path):
 				os.makedirs(udicom_path)
@@ -105,6 +128,7 @@ def main():
 					dcmDIR = args.dir+name+'/'+name2+'/'
 					dcmID = name+'_'+name2
 					dcmDIR = finddicom(dcmDIR)
+					print(name2)
 					processdcm(dcmDIR,dcmID)	
 
 if __name__ == '__main__':
