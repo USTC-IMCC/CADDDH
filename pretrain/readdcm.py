@@ -1,4 +1,8 @@
 # -*- coding:utf-8 -*-
+'''
+created by xjy
+Edit on 2018.12.03
+'''
 import os
 import struct
 import pydicom
@@ -10,7 +14,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Preprocee dicom data')
 parser.add_argument('--dir',default='./dicom/',type=str,help='choose directory to process')
 parser.add_argument('--res',default='./res/',type=str,help='choose directory to store the result')
-parser.add_argument('--obj',default='stu',type=str,help='choose doc or stu to process')
+parser.add_argument('--obj',default='doc',type=str,help='choose doc or stu to process')
 args = parser.parse_args()
 if args.dir[-1]!='/':	# in case user forget to print /
 	args.dir += '/'
@@ -52,7 +56,9 @@ def finddicom(dcmdir):			#find the dir of dicom
 				if(os.path.isdir(dcmdir+d1+'/'+d2)):
 					for d3 in os.listdir(dcmdir+d1+'/'+d2):
 						if(str(d3)=='I1000000'):
+							print('find the dicom')
 							return dcmdir+d1+'/'+d2+'/'+d3
+	print('DICOM NOT FOUND!')
 	return None
 
 def processdcm(dcmDIR,dcmID):	#save the data
@@ -105,6 +111,8 @@ def processdcm(dcmDIR,dcmID):	#save the data
 			if not os.path.exists(udicom_path):
 				os.makedirs(udicom_path)
 			shutil.copyfile(dcmDIR,udicom_path+dcmID+'.dcm')
+	else:
+		print('Error DIR!')
 
 def drawcross(img,ptx,pty,length = 10,width=2,color=(0,0,255)):
 	p1 = int(ptx-length/2)
@@ -124,7 +132,7 @@ def main():
 	for name in os.listdir(args.dir):
 		if(os.path.isdir(args.dir+name)):			#标注者编号
 			for name2 in os.listdir(args.dir+name):		#病人编号
-				if(os.path.isdir(args.dir+name)):
+				if(os.path.isdir(args.dir+name+'/'+name2+'/')):
 					dcmDIR = args.dir+name+'/'+name2+'/'
 					dcmID = name+'_'+name2
 					dcmDIR = finddicom(dcmDIR)
