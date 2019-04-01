@@ -2,6 +2,7 @@
 '''
 created by xjy
 Edit on 2018.12.03
+Add resize to unified image size on 12.21
 '''
 import os
 import struct
@@ -12,7 +13,7 @@ import shutil
 import numpy as np
 
 parser = argparse.ArgumentParser(description='Preprocee dicom data')
-parser.add_argument('--dir',default='./dicom/',type=str,help='choose directory to process')
+parser.add_argument('--dir',default='./',type=str,help='choose directory to process')
 parser.add_argument('--res',default='./res/',type=str,help='choose directory to store the result')
 parser.add_argument('--obj',default='doc',type=str,help='choose doc or stu to process')
 args = parser.parse_args()
@@ -81,10 +82,19 @@ def processdcm(dcmDIR,dcmID):	#save the data
 						os.makedirs(udicom_path)
 					shutil.copyfile(dcmDIR,udicom_path+dcmID+'.dcm')
 					return
+			#ps = dcm[0x0018, 0x1164]
+			ps = dcm.PixelSpacing
+			w_ratio = float(ps[0])
+			h_ratio = float(ps[1])
+			print(w_ratio,type(w_ratio))
+			
 			img = dcm.pixel_array
 			if not os.path.exists(ori_path):
 				os.makedirs(ori_path)
 			img = (img - dcm.WindowCenter + 0.5 * dcm.WindowWidth)/dcm.WindowWidth * 255
+			print(img.shape)
+			img = cv2.resize(img,(int(img.shape[1]*w_ratio/0.15),int(img.shape[0]*h_ratio/0.15)),interpolation=cv2.INTER_LINEAR)#注意resize先宽后高，shape先高后宽
+			print(img.shape)
 			cv2.imwrite(ori_path + dcmID + '.jpg',img)
 			if not os.path.exists(txt_path):
 				os.makedirs(txt_path)
